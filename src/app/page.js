@@ -112,8 +112,8 @@ export default function Home() {
         <div className={styles.intro}>
           <input
             type="file"
-            accept="audio/*"
-            onChange={(e) => setFile(e.target.files[0])}
+            accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.aif,.aiff"
+            onChange={handleFileChange}
           />
         </div>
 
