@@ -118,7 +118,7 @@ export default function Home() {
         </div>
 
         {file ? (<audio ref={audioRef} controls onPlay={handlePlay} />) : ""}
-        <h3>{file ? file.name.split("(")[0] : ""}</h3>
+        <h3>{file ? file.name.split(/[(.;|]/)[0] : ""}</h3>
         {file && (
           <canvas
             width="1024px"
