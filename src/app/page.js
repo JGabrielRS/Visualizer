@@ -113,7 +113,7 @@ export default function Home() {
           <input
             type="file"
             accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.aif,.aiff"
-            onChange={handleFileChange}
+            onChange={(e) => setFile(e.target.files[0])}
           />
         </div>
 
