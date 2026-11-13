@@ -45,13 +45,15 @@
 }
 
 .fileInput {
-  display: inline-block;
+  display: flex;
   padding: 10px 15px;
   background: color-mix(in srgb, var(--background), var(--text-primary) 10%);
   color: var(--text-primary);
   border-radius: 2px;
   cursor: pointer;
   text-align: center;
+  align-items: center;
+  justify-content: center;
   transition: background 0.2s;
 }
 
@@ -61,6 +63,11 @@
 
 .fileInput input {
   display: none;
+}
+
+.fileInput button {
+  background: none;
+  border: none;
 }
 
 .dados {
@@ -148,21 +155,12 @@ a.secondary {
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding-bottom: 180px;
   box-sizing: border-box;
 }
 
 .visualizerContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  bottom: 0;
-  margin-bottom: 8vh;
-  width: 100%;
-  max-width: 1024px;
-  padding: 0 24px;
-  box-sizing: border-box;
+    width: 100vw;
+    margin-top: 80px;
 }
 
 .lyrics {
@@ -187,6 +185,85 @@ a.secondary {
   text-wrap: balance;
   color: var(--text-primary);
   text-align: left;
+}
+
+.modalOverlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+.modal {
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+
+    background: var(--foreground);
+    color: var(--text-primary);
+
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    border-radius: 12px;
+
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.modalHeader h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.closeButton {
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    font-size: 28px;
+    cursor: pointer;
+}
+
+/* Opções */
+.visualizerOptions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.visualizerOption,
+.selectedVisualizer {
+    padding: 14px;
+    border-radius: 6px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.visualizerOption {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.visualizerOption:hover {
+    background: rgba(128, 128, 128, 0.15);
+}
+
+.selectedVisualizer {
+    background: color-mix(in srgb, var(--background), var(--text-primary) 20%);
+    color: var(--text-primary);
+    border: 1px solid var(--text-primary);
 }
 
 /* Enable hover only on non-touch devices */

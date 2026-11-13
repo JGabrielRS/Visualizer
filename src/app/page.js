@@ -5,6 +5,7 @@ import styles from "./page.module.css";
 import { useState, useRef, useEffect } from "react";
 import { fetchLyrics } from "../service/lrclib";
 import { parseLrc } from "../utils/parseLyrics";
+import Visualizer from "../components/Visualizer";
 
 
 export default function Home() {
@@ -15,21 +16,24 @@ export default function Home() {
   const [lyricLines, setLyricLines] = useState([]);
   const [currentTime, setCurrentTime] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [visualizerMode, setVisualizerMode] = useState("mesh-frequency");
 
   const audioCtx = useRef(null);
   const analyser = useRef(null);
   const source = useRef(null);
-
-  const canvasRef = useRef(null);
   const audioRef = useRef(null);
-  const animationRef = useRef(null);
 
   function initializeAudio() {
     if (!audioCtx.current) {
       audioCtx.current = new AudioContext();
 
       analyser.current = audioCtx.current.createAnalyser();
-      analyser.current.fftSize = 512;
+      analyser.current.fftSize = 4096;
+      analyser.current.smoothingTimeConstant = 0.65;
+      analyser.current.minDecibels = -90;
+      analyser.current.maxDecibels = -20;
 
       source.current = audioCtx.current.createMediaElementSource(
         audioRef.current
@@ -40,53 +44,6 @@ export default function Home() {
     }
   }
 
-  function draw() {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-
-    const WIDTH = canvas.width;
-    const HEIGHT = canvas.height;
-
-    const analyserNode = analyser.current;
-
-    const bufferLength = analyserNode.fftSize;
-    const dataArray = new Uint8Array(bufferLength);
-
-    function render() {
-      animationRef.current = requestAnimationFrame(render);
-
-      analyserNode.getByteTimeDomainData(dataArray);
-
-      ctx.fillStyle = "rgb(0, 0, 0)";
-      ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-      ctx.lineWidth = 1.5;
-      ctx.strokeStyle = "rgb(255, 255, 255)";
-      ctx.beginPath();
-
-      const sliceWidth = WIDTH / bufferLength;
-      let x = 0;
-
-      for (let i = 0; i < bufferLength; i++) {
-        const v = dataArray[i] / 128.0;
-        const y = v * (HEIGHT / 2);
-
-        if (i === 0) {
-          ctx.moveTo(x, y);
-        } else {
-          ctx.lineTo(x, y);
-        }
-
-        x += sliceWidth;
-      }
-
-      ctx.lineTo(WIDTH, HEIGHT / 2);
-      ctx.stroke();
-    }
-
-    render();
-  }
-
   async function handlePlay() {
     try {
       initializeAudio();
@@ -95,9 +52,8 @@ export default function Home() {
         await audioCtx.current.resume();
       }
 
-      if (!animationRef.current && canvasRef.current) {
-        draw();
-      }
+      setIsPlaying(true);
+
     } catch (error) {
       if (error.name !== "AbortError") {
         console.error("Erro ao reproduzir áudio:", error);
@@ -180,16 +136,73 @@ export default function Home() {
               />
             </label>
             {file ? (
-              <audio
-                ref={audioRef}
-                src={audioUrl}
-                controls
-                preload="metadata"
-                onPlay={handlePlay}
-                onTimeUpdate={() => {
-                  setCurrentTime(audioRef.current.currentTime);
-                }}
-              />
+              <>
+                <audio
+                  ref={audioRef}
+                  src={audioUrl}
+                  controls
+                  preload="metadata"
+                  onPlay={handlePlay}
+                  onPause={() => setIsPlaying(false)}
+                  onTimeUpdate={() => {
+                    setCurrentTime(audioRef.current.currentTime);
+                  }}
+                />
+                <label className={styles.fileInput}>
+                  <button
+                    className={styles.visualizerButton}
+                    onClick={() => setIsModalOpen(true)}
+                  >
+                    Visualizers
+                  </button>
+                </label>
+                {isModalOpen && (
+                  <div
+                    className={styles.modalOverlay}
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    <div
+                      className={styles.modal}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className={styles.modalHeader}>
+                        <h2>Visualizers</h2>
+
+                        <button
+                          className={styles.closeButton}
+                          onClick={() => setIsModalOpen(false)}
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      <div className={styles.visualizerOptions}>
+                        {[
+                          { id: "mesh-waveform", name: "Mesh Waveform" },
+                          { id: "mesh-frequency", name: "Mesh Frequency" },
+                          { id: "oscilloscope", name: "Oscilloscope" },
+                          { id: "frequency-bars", name: "Frequency Bars" }
+                        ].map((visualizer) => (
+                          <button
+                            key={visualizer.id}
+                            className={
+                              visualizerMode === visualizer.id
+                                ? styles.selectedVisualizer
+                                : styles.visualizerOption
+                            }
+                            onClick={() => {
+                              setVisualizerMode(visualizer.id);
+                              setIsModalOpen(false);
+                            }}
+                          >
+                            {visualizer.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : ""}
           </div>
           <div style={{ textAlign: "center" }}>
@@ -223,11 +236,10 @@ export default function Home() {
         </div>
         <div className={styles.visualizerContainer}>
           {file && (
-            <canvas
-              width={1024}
-              height={200}
-              ref={canvasRef}
-              className={styles.visualizer}
+            <Visualizer
+              analyserRef={analyser}
+              active={isPlaying}
+              mode={visualizerMode}
             />
           )}
         </div>
