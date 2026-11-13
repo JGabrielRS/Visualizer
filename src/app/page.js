@@ -3,9 +3,18 @@
 
 import styles from "./page.module.css";
 import { useState, useRef, useEffect } from "react";
+import { fetchLyrics } from "../service/lrclib";
+import { parseLrc } from "../utils/parseLyrics";
+
 
 export default function Home() {
+  const API_URL = "https://lrclib.net/api";
+
   const [file, setFile] = useState(null);
+  const [lyrics, setLyrics] = useState("");
+  const [lyricLines, setLyricLines] = useState([]);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [loading, setLoading] = useState(false);
 
   const audioCtx = useRef(null);
   const analyser = useRef(null);
@@ -79,53 +88,149 @@ export default function Home() {
   }
 
   async function handlePlay() {
-    initializeAudio();
+    try {
+      initializeAudio();
 
-    if (audioCtx.current.state === "suspended") {
-      await audioCtx.current.resume();
-    }
+      if (audioCtx.current.state === "suspended") {
+        await audioCtx.current.resume();
+      }
 
-    if (!animationRef.current) {
-      draw();
+      if (!animationRef.current && canvasRef.current) {
+        draw();
+      }
+    } catch (error) {
+      if (error.name !== "AbortError") {
+        console.error("Erro ao reproduzir áudio:", error);
+      }
     }
   }
 
+
+  const [artist, title] = file?.name
+    .replace(/\.[^/.]+$/, "")
+    .replace(/\s*\([^)]*\)/g, "")
+    .split("-")
+    .map(part => part.trim()) ?? ["", ""];
+
+  const activeLineIndex = lyricLines.findLastIndex(
+    (line) => line.time <= currentTime
+  );
+
   useEffect(() => {
-    if (!file || !audioRef.current) return;
+    if (!file) {
+      setLyrics("");
+      return;
+    }
+
+    async function loadLyrics() {
+      try {
+        setLoading(true);
+
+        const results = await fetchLyrics(artist, title, API_URL);
+
+        if (!results || results.length === 0) {
+          setLyrics("Nenhuma letra encontrada.");
+          return;
+        }
+
+        const music = results[0];
+
+        if (music.syncedLyrics) {
+          setLyricLines(parseLrc(music.syncedLyrics));
+        } else {
+          setLyricLines([]);
+          setLyrics(music.plainLyrics || "Letra indisponível.");
+        }
+
+      } catch (error) {
+        setLyrics("Erro ao buscar letra.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadLyrics();
+  }, [file, artist, title]);
+
+  const [audioUrl, setAudioUrl] = useState(null);
+
+  useEffect(() => {
+    if (!file) {
+      setAudioUrl(null);
+      return;
+    }
 
     const url = URL.createObjectURL(file);
+    setAudioUrl(url);
 
-    audioRef.current.src = url;
-
-    return () => {
-      audioRef.current.pause();
-      audioRef.current.removeAttribute("src");
-      audioRef.current.load();
-
-      URL.revokeObjectURL(url);
-    };
+    return () => URL.revokeObjectURL(url);
   }, [file]);
 
   return (
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.intro}>
-          <input
-            type="file"
-            accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.aif,.aiff"
-            onChange={(e) => setFile(e.target.files[0])}
-          />
+          <div className={styles.buttonContainer}>
+            <label className={styles.fileInput}>
+              Selecionar música
+              <input
+                type="file"
+                accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.oga,.aif,.aiff"
+                onChange={(e) => setFile(e.target.files[0])}
+              />
+            </label>
+            {file ? (
+              <audio
+                ref={audioRef}
+                src={audioUrl}
+                controls
+                preload="metadata"
+                onPlay={handlePlay}
+                onTimeUpdate={() => {
+                  setCurrentTime(audioRef.current.currentTime);
+                }}
+              />
+            ) : ""}
+          </div>
+          <div style={{ textAlign: "center" }}>
+            <h1>{title}</h1>
+            <h3>{artist}</h3>
+          </div>
         </div>
-
-        {file ? (<audio ref={audioRef} controls onPlay={handlePlay} />) : ""}
-        <h3>{file ? file.name.split(/[(.;|]/)[0] : ""}</h3>
-        {file && (
-          <canvas
-            width="1024px"
-            height="auto"
-            ref={canvasRef}
-          />
-        )}
+        <div className={styles.lyricsContainer}>
+          {loading ? (
+            <p>Buscando letra...</p>
+          ) : (
+            <div className={styles.lyrics}>
+              {lyricLines.length > 0 ? (
+                lyricLines.map((line, index) => (
+                  <p
+                    key={index}
+                    className={
+                      index === activeLineIndex
+                        ? styles.activeLyric
+                        : styles.lyric
+                    }
+                  >
+                    {line.text}
+                  </p>
+                ))
+              ) : (
+                <p>{lyrics}</p>
+              )}
+            </div>
+          )}
+        </div>
+        <div className={styles.visualizerContainer}>
+          {file && (
+            <canvas
+              width={1024}
+              height={200}
+              ref={canvasRef}
+              className={styles.visualizer}
+            />
+          )}
+        </div>
       </main>
     </div>
   );
