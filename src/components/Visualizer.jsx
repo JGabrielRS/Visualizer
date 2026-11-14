@@ -79,11 +79,17 @@ export default function Visualizer({
                 0, 0, width, 0
             );
 
-            gradient.addColorStop(0, "#F52B91");
-            gradient.addColorStop(0.25, "#C026D3");
-            gradient.addColorStop(0.5, "#7628D7");
-            gradient.addColorStop(0.75, "#315CEB");
-            gradient.addColorStop(1, "#77C9F2");
+            if (mode === "mesh-frequency" || mode === "mesh-waveform") {
+                gradient.addColorStop(0, "#ffffff");
+                gradient.addColorStop(0.25, "#e7e7e7");
+                gradient.addColorStop(0.5, "#7e7e7e");
+                gradient.addColorStop(0.75, "#5e5e5e");
+                gradient.addColorStop(1, "#4b4b4b");
+            } else {
+                gradient.addColorStop(0, "#ffffff");
+                gradient.addColorStop(0.5, "#e7e7e7");
+                gradient.addColorStop(1, "#d7d7d7");
+            }
 
             // Oscilloscope
             if (mode === "oscilloscope") {
@@ -91,7 +97,7 @@ export default function Visualizer({
 
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = gradient;
-                ctx.shadowColor = "#C026D3";
+                ctx.shadowColor = "#7e7e7e";
                 ctx.shadowBlur = 12;
 
                 const sliceWidth = width / waveformData.length;
@@ -115,23 +121,24 @@ export default function Visualizer({
 
             // Frequency Bars
             if (mode === "frequency-bars") {
-                const barWidth = width / frequencyData.length;
+                const barWidth = 5;
+                const barGap = 3;
 
                 ctx.fillStyle = gradient;
-                ctx.shadowColor = "#168bff";
+                ctx.shadowColor = "#7e7e7e";
                 ctx.shadowBlur = 8;
 
                 for (let i = 0; i < frequencyData.length; i++) {
                     const barHeight =
                         (frequencyData[i] / 255) * height;
 
-                    const x = i * barWidth;
+                    const x = i * (barWidth + barGap);
                     const y = height - barHeight;
 
                     ctx.fillRect(
                         x,
                         y,
-                        Math.max(1, barWidth - 1),
+                        barWidth,
                         barHeight
                     );
                 }
@@ -228,7 +235,7 @@ export default function Visualizer({
             // Estilo da malha
             ctx.strokeStyle = gradient;
             ctx.lineWidth = 1;
-            ctx.shadowColor = "#168bff";
+            ctx.shadowColor = "#7e7e7e";
             ctx.shadowBlur = 8;
 
             // Linhas horizontais

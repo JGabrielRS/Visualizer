@@ -30,7 +30,11 @@ export default function Home() {
       audioCtx.current = new AudioContext();
 
       analyser.current = audioCtx.current.createAnalyser();
-      analyser.current.fftSize = 4096;
+      if (visualizerMode === "oscilloscope" || visualizerMode === "frequency-bars") {
+        analyser.current.fftSize = 512;
+      } else {
+        analyser.current.fftSize = 4096;
+      }
       analyser.current.smoothingTimeConstant = 0.65;
       analyser.current.minDecibels = -90;
       analyser.current.maxDecibels = -20;
