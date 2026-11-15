@@ -80,51 +80,48 @@ export default function Visualizer({
             );
 
             if (artist.toUpperCase() === "FRANK OCEAN") {
-                ctx.shadowColor = "#91B69D";
-                ctx.shadowBlur = 14;
+                ctx.shadowColor = "#49986b";
+                ctx.shadowBlur = 2;
                 if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#E6B18F");
-                    gradient.addColorStop(0.2, "#D6A17E");
-                    gradient.addColorStop(0.4, "#A5A78A");
-                    gradient.addColorStop(0.6, "#91B69D");
-                    gradient.addColorStop(0.8, "#c1d3bd");
-                    gradient.addColorStop(1, "#DCE8D8");
+                    gradient.addColorStop(0, "#fafafa");
+                    gradient.addColorStop(0.25, "#121212");
+                    gradient.addColorStop(0.5, "#a49b96");
+                    gradient.addColorStop(0.75, "#9e6150");
+                    gradient.addColorStop(1, "#49986b");
                 } else {
                     gradient.addColorStop(0, "#ffffff");
                     gradient.addColorStop(0.5, "#e7e7e7");
                     gradient.addColorStop(1, "#d7d7d7");
                 }
-            } if (artist.toUpperCase() === "KANYE WEST") {
-                ctx.shadowColor = "#D52B9D";
-                ctx.shadowBlur = 18;
+            } else if (artist.toUpperCase() === "KANYE WEST") {
+                ctx.shadowColor = "#b25186";
+                ctx.shadowBlur = 8;
 
                 if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#FF8BCB");
-                    gradient.addColorStop(0.2, "#F052B5");
-                    gradient.addColorStop(0.4, "#D52B9D");
-                    gradient.addColorStop(0.6, "#A33ACB");
-                    gradient.addColorStop(0.8, "#6946C8");
-                    gradient.addColorStop(1, "#3976D9");
+                    gradient.addColorStop(0, "#221e1f");
+                    gradient.addColorStop(0.25, "#ffffff");
+                    gradient.addColorStop(0.5, "#b9b353");
+                    gradient.addColorStop(0.75, "#853082");
+                    gradient.addColorStop(1, "#b25186");
                 } else {
-                    gradient.addColorStop(0, "#F052B5");
-                    gradient.addColorStop(0.5, "#A33ACB");
-                    gradient.addColorStop(1, "#3976D9");
+                    gradient.addColorStop(0, "#221e1f");
+                    gradient.addColorStop(0.5, "#b9b353");
+                    gradient.addColorStop(1, "#b25186");
                 }
-            } if (artist.toUpperCase() === "DANIEL CAESAR") {
-                ctx.shadowColor = "#2865A8";
-                ctx.shadowBlur = 16;
+            } else if (artist.toUpperCase() === "DANIEL CAESAR") {
+                ctx.shadowColor = "#164cf4";
+                ctx.shadowBlur = 12;
 
                 if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#3979B9");
-                    gradient.addColorStop(0.2, "#2865A8");
-                    gradient.addColorStop(0.4, "#1D4F91");
-                    gradient.addColorStop(0.6, "#193C78");
-                    gradient.addColorStop(0.8, "#172B60");
-                    gradient.addColorStop(1, "#101B42");
+                    gradient.addColorStop(0, "#164cf4");
+                    gradient.addColorStop(0.2, "#72bef8");
+                    gradient.addColorStop(0.4, "#230c76");
+                    gradient.addColorStop(0.6, "#062892");
+                    gradient.addColorStop(1, "#075591");
                 } else {
-                    gradient.addColorStop(0, "#3979B9");
-                    gradient.addColorStop(0.5, "#1D4F91");
-                    gradient.addColorStop(1, "#101B42");
+                    gradient.addColorStop(0, "#164cf4");
+                    gradient.addColorStop(0.5, "#230c76");
+                    gradient.addColorStop(1, "#075591");
                 }
             } else {
                 ctx.shadowColor = "#e7e7e7";

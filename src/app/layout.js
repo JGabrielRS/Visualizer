@@ -11,9 +11,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
 export const metadata = {
   title: "visualizer",
   description: "visualizer for music",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Visualizer",
+  },
 };
 
 export default function RootLayout({ children }) {
