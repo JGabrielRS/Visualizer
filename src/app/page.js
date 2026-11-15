@@ -19,6 +19,39 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [visualizerMode, setVisualizerMode] = useState("mesh-frequency");
+  const [introVisible, setIntroVisible] = useState(true);
+
+  const hideIntroTimeout = useRef(null);
+  const touchStartY = useRef(0);
+
+
+  function handleTouchStart(e) {
+    touchStartY.current = e.touches[0].clientY;
+  }
+
+  function handleTouchEnd(e) {
+    const touchEndY = e.changedTouches[0].clientY;
+    const difference = touchStartY.current - touchEndY;
+
+    // Dedo se deslocou para cima
+    if (difference > 50) {
+      showIntro();
+    }
+  }
+
+
+  function showIntro() {
+    setIntroVisible(true);
+
+    clearTimeout(hideIntroTimeout.current);
+
+    if (isPlaying && !isModalOpen) {
+      hideIntroTimeout.current = setTimeout(() => {
+        setIntroVisible(false);
+      }, 4000);
+    }
+  }
+
 
   const audioCtx = useRef(null);
   const analyser = useRef(null);
@@ -114,6 +147,29 @@ export default function Home() {
 
   const [audioUrl, setAudioUrl] = useState(null);
 
+
+  useEffect(() => {
+    clearTimeout(hideIntroTimeout.current);
+
+    if (!isPlaying || isModalOpen) {
+      setIntroVisible(true);
+      return;
+    }
+
+    showIntro();
+
+    return () => {
+      clearTimeout(hideIntroTimeout.current);
+    };
+  }, [isPlaying, isModalOpen]);
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(hideIntroTimeout.current);
+    };
+  }, []);
+
+
   useEffect(() => {
     if (!file) {
       setAudioUrl(null);
@@ -128,8 +184,20 @@ export default function Home() {
 
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.intro}>
+      <main
+        className={styles.main}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onClick={() => {
+          if (!introVisible) {
+            showIntro();
+          }
+        }}
+      >
+        <div
+          className={`${styles.intro} ${introVisible ? "" : styles.introHidden
+            }`}
+        >
           <div className={styles.buttonContainer}>
             <label className={styles.fileInput}>
               Selecionar música
@@ -160,59 +228,59 @@ export default function Home() {
                     Visualizers
                   </button>
                 </label>
-                {isModalOpen && (
-                  <div
-                    className={styles.modalOverlay}
-                    onClick={() => setIsModalOpen(false)}
-                  >
-                    <div
-                      className={styles.modal}
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <div className={styles.modalHeader}>
-                        <h2>Visualizers</h2>
-
-                        <button
-                          className={styles.closeButton}
-                          onClick={() => setIsModalOpen(false)}
-                        >
-                          ×
-                        </button>
-                      </div>
-
-                      <div className={styles.visualizerOptions}>
-                        {[
-                          { id: "mesh-waveform", name: "Mesh Waveform" },
-                          { id: "mesh-frequency", name: "Mesh Frequency" },
-                          { id: "oscilloscope", name: "Oscilloscope" },
-                          { id: "frequency-bars", name: "Frequency Bars" }
-                        ].map((visualizer) => (
-                          <button
-                            key={visualizer.id}
-                            className={
-                              visualizerMode === visualizer.id
-                                ? styles.selectedVisualizer
-                                : styles.visualizerOption
-                            }
-                            onClick={() => {
-                              setVisualizerMode(visualizer.id);
-                              setIsModalOpen(false);
-                            }}
-                          >
-                            {visualizer.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </>
             ) : ""}
           </div>
-          <div style={{ textAlign: "center" }}>
-            <h1>{title}</h1>
-            <h3>{artist}</h3>
+        </div>
+        {isModalOpen && (
+          <div
+            className={styles.modalOverlay}
+            onClick={() => setIsModalOpen(false)}
+          >
+            <div
+              className={styles.modal}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className={styles.modalHeader}>
+                <h2>Visualizers</h2>
+
+                <button
+                  className={styles.closeButton}
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className={styles.visualizerOptions}>
+                {[
+                  { id: "mesh-waveform", name: "Mesh Waveform" },
+                  { id: "mesh-frequency", name: "Mesh Frequency" },
+                  { id: "oscilloscope", name: "Oscilloscope" },
+                  { id: "frequency-bars", name: "Frequency Bars" }
+                ].map((visualizer) => (
+                  <button
+                    key={visualizer.id}
+                    className={
+                      visualizerMode === visualizer.id
+                        ? styles.selectedVisualizer
+                        : styles.visualizerOption
+                    }
+                    onClick={() => {
+                      setVisualizerMode(visualizer.id);
+                      setIsModalOpen(false);
+                    }}
+                  >
+                    {visualizer.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
+        )}
+        <div style={{ textAlign: "center" }}>
+          <h1>{title}</h1>
+          <h4>{artist}</h4>
         </div>
         <div className={styles.lyricsContainer}>
           {loading ? (
@@ -244,6 +312,7 @@ export default function Home() {
               analyserRef={analyser}
               active={isPlaying}
               mode={visualizerMode}
+              artist={artist}
             />
           )}
         </div>

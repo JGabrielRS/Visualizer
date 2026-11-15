@@ -7,7 +7,8 @@ import styles from "./Visualizer.module.css";
 export default function Visualizer({
     analyserRef,
     active,
-    mode = "mesh-frequency"
+    mode = "mesh-frequency",
+    artist
 }) {
     const canvasRef = useRef(null);
 
@@ -47,8 +48,7 @@ export default function Visualizer({
 
         function resizeCanvas() {
             const rect = canvas.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
             canvas.width = rect.width * dpr;
             canvas.height = rect.height * dpr;
 
@@ -79,34 +79,91 @@ export default function Visualizer({
                 0, 0, width, 0
             );
 
-            if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                gradient.addColorStop(0, "#ffffff");
-                gradient.addColorStop(0.25, "#e7e7e7");
-                gradient.addColorStop(0.5, "#7e7e7e");
-                gradient.addColorStop(0.75, "#5e5e5e");
-                gradient.addColorStop(1, "#4b4b4b");
+            if (artist.toUpperCase() === "FRANK OCEAN") {
+                ctx.shadowColor = "#91B69D";
+                ctx.shadowBlur = 14;
+                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
+                    gradient.addColorStop(0, "#E6B18F");
+                    gradient.addColorStop(0.2, "#D6A17E");
+                    gradient.addColorStop(0.4, "#A5A78A");
+                    gradient.addColorStop(0.6, "#91B69D");
+                    gradient.addColorStop(0.8, "#c1d3bd");
+                    gradient.addColorStop(1, "#DCE8D8");
+                } else {
+                    gradient.addColorStop(0, "#ffffff");
+                    gradient.addColorStop(0.5, "#e7e7e7");
+                    gradient.addColorStop(1, "#d7d7d7");
+                }
+            } if (artist.toUpperCase() === "KANYE WEST") {
+                ctx.shadowColor = "#D52B9D";
+                ctx.shadowBlur = 18;
+
+                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
+                    gradient.addColorStop(0, "#FF8BCB");
+                    gradient.addColorStop(0.2, "#F052B5");
+                    gradient.addColorStop(0.4, "#D52B9D");
+                    gradient.addColorStop(0.6, "#A33ACB");
+                    gradient.addColorStop(0.8, "#6946C8");
+                    gradient.addColorStop(1, "#3976D9");
+                } else {
+                    gradient.addColorStop(0, "#F052B5");
+                    gradient.addColorStop(0.5, "#A33ACB");
+                    gradient.addColorStop(1, "#3976D9");
+                }
+            } if (artist.toUpperCase() === "DANIEL CAESAR") {
+                ctx.shadowColor = "#2865A8";
+                ctx.shadowBlur = 16;
+
+                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
+                    gradient.addColorStop(0, "#3979B9");
+                    gradient.addColorStop(0.2, "#2865A8");
+                    gradient.addColorStop(0.4, "#1D4F91");
+                    gradient.addColorStop(0.6, "#193C78");
+                    gradient.addColorStop(0.8, "#172B60");
+                    gradient.addColorStop(1, "#101B42");
+                } else {
+                    gradient.addColorStop(0, "#3979B9");
+                    gradient.addColorStop(0.5, "#1D4F91");
+                    gradient.addColorStop(1, "#101B42");
+                }
             } else {
-                gradient.addColorStop(0, "#ffffff");
-                gradient.addColorStop(0.5, "#e7e7e7");
-                gradient.addColorStop(1, "#d7d7d7");
+                ctx.shadowColor = "#e7e7e7";
+                ctx.shadowBlur = 8;
+                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
+                    gradient.addColorStop(0, "#ffffff");
+                    gradient.addColorStop(0.25, "#f1f1f1");
+                    gradient.addColorStop(0.5, "#e7e7e7");
+                    gradient.addColorStop(0.75, "#e1e1e1");
+                    gradient.addColorStop(1, "#d7d7d7");
+                } else {
+                    gradient.addColorStop(0, "#ffffff");
+                    gradient.addColorStop(0.5, "#e7e7e7");
+                    gradient.addColorStop(1, "#d7d7d7");
+                }
             }
+
+
+            // Oscilloscope
 
             // Oscilloscope
             if (mode === "oscilloscope") {
                 ctx.beginPath();
+                ctx.shadowBlur = 0;
 
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = gradient;
-                ctx.shadowColor = "#7e7e7e";
-                ctx.shadowBlur = 12;
 
-                const sliceWidth = width / waveformData.length;
+                const samples = Math.min(waveformData.length, Math.floor(width * 1.5));
+                const step = waveformData.length / samples;
 
-                for (let i = 0; i < waveformData.length; i++) {
+                const sliceWidth = width / (samples - 1);
+
+                for (let i = 0; i < samples; i++) {
+                    const index = Math.floor(i * step);
+
                     const x = i * sliceWidth;
-
-                    const v = waveformData[i] / 128;
-                    const y = v * (height / 2);
+                    const v = waveformData[index] / 128;
+                    const y = (v - 1) * (height / 2.5) + height / 2;
 
                     if (i === 0) {
                         ctx.moveTo(x, y);
@@ -119,14 +176,14 @@ export default function Visualizer({
                 return;
             }
 
+
             // Frequency Bars
             if (mode === "frequency-bars") {
+                ctx.shadowBlur = 0;
                 const barWidth = 5;
                 const barGap = 3;
 
                 ctx.fillStyle = gradient;
-                ctx.shadowColor = "#7e7e7e";
-                ctx.shadowBlur = 8;
 
                 for (let i = 0; i < frequencyData.length; i++) {
                     const barHeight =
@@ -156,7 +213,7 @@ export default function Visualizer({
             bass /= 20 * 255;
 
             // Aumenta a resposta dos graves
-            bass = Math.min(bass * 1.2, 1);
+            bass = Math.min(bass * 1.7, 1);
 
             // Calcula os pontos da malha
             for (let row = 0; row <= rows; row++) {
@@ -235,8 +292,6 @@ export default function Visualizer({
             // Estilo da malha
             ctx.strokeStyle = gradient;
             ctx.lineWidth = 1;
-            ctx.shadowColor = "#7e7e7e";
-            ctx.shadowBlur = 8;
 
             // Linhas horizontais
             for (let row = 0; row <= rows; row++) {

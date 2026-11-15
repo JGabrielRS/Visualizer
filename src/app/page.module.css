@@ -37,6 +37,7 @@
   align-items: center;
   text-align: left;
   gap: 24px;
+  margin-bottom: 10px;
 } 
 
 .buttonContainer {
@@ -331,4 +332,23 @@ a.secondary {
     --button-secondary-hover: #1a1a1a;
     --button-secondary-border: #1a1a1a;
   }
+}
+
+.intro {
+    overflow: hidden;
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+
+    transition:
+        opacity 0.4s ease,
+        transform 0.4s ease,
+        max-height 0.5s ease;
+}
+
+.introHidden {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
 }
