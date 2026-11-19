@@ -19,17 +19,25 @@
 }
 
 .main {
-  display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 1024px;
-  min-height: 100vh;
-  flex-direction: column;
-  align-items: center;
-  background-color: var(--foreground);
-  padding: 40px 60px;
-  box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    max-width: 1024px;
+
+    height: 100vh;
+    min-height: 100vh;
+
+    flex-direction: column;
+    align-items: center;
+
+    padding: 40px 60px 0 60px;
+    box-sizing: border-box;
 }
+
+.main,
+.visualizerContainer {
+    overflow: visible;
+}
+
 
 .intro {
   display: flex;
@@ -150,35 +158,55 @@ a.secondary {
 }
 
 .lyricsContainer {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  box-sizing: border-box;
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0;
+
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 .visualizerContainer {
     width: 100vw;
-    margin-top: 80px;
+    height: 220px;
+    min-height: 220px;
+    flex: 0 0 220px;
+
+    margin-top: auto;
 }
 
 .lyrics {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-  margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    text-align: center;
 }
 
-.lyric {
-  display: none;
+.nextLyric {
+  max-width: 420px;
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 40px;
+  letter-spacing: -2.4px;
+  text-wrap: balance;
+  color: color-mix(in srgb, var(--text-primary) 50%, grey 50%);
+  text-align: left;
+  overflow: hidden;
 }
 
 .activeLyric {
-  max-width: 420px;
+  max-width: 620px;
   font-size: 60px;
   font-weight: 600;
   line-height: 48px;
@@ -186,6 +214,8 @@ a.secondary {
   text-wrap: balance;
   color: var(--text-primary);
   text-align: left;
+  margin-bottom: 10px;
+
 }
 
 .modalOverlay {
@@ -283,7 +313,14 @@ a.secondary {
 @media (max-width: 600px) {
   .main {
     padding: 20px 10px;
-  }
+}
+
+.visualizerContainer {
+    width: 100vw;
+    height: 200px;
+    min-height: 200px;
+    flex-basis: 200px;
+}
 
   .buttonContainer {
     flex-direction: column;
@@ -299,10 +336,19 @@ a.secondary {
     max-width: 320px;
     line-height: 40px;
     letter-spacing: -1.92px;
+    margin-bottom: 10px;
   }
 
+  .nextLyric {
+    font-size: 32px;
+    max-width: 300px;
+    line-height: 32px;
+    letter-spacing: -1.92px;
+  }
+
+
   .lyrics {
-    margin-bottom: 16px;
+    height: auto;
   }
 
   .visualizerContainer {

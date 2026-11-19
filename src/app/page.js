@@ -24,7 +24,6 @@ export default function Home() {
   const hideIntroTimeout = useRef(null);
   const touchStartY = useRef(0);
 
-
   function handleTouchStart(e) {
     touchStartY.current = e.touches[0].clientY;
   }
@@ -104,6 +103,15 @@ export default function Home() {
     .replace(/\s*\([^)]*\)/g, "")
     .split("-")
     .map(part => part.trim()) ?? ["", ""];
+
+
+  const paletteBaseColor = {
+    "KANYE WEST": "#853082",
+    "FRANK OCEAN": "#49986b",
+    "DANIEL CAESAR": "#164cf4"
+  };
+
+  const baseColor = paletteBaseColor[artist.toUpperCase()] ?? "#888888";
 
   const activeLineIndex = lyricLines.findLastIndex(
     (line) => line.time <= currentTime
@@ -287,21 +295,18 @@ export default function Home() {
             <p>Buscando letra...</p>
           ) : (
             <div className={styles.lyrics}>
-              {lyricLines.length > 0 ? (
-                lyricLines.map((line, index) => (
-                  <p
-                    key={index}
-                    className={
-                      index === activeLineIndex
-                        ? styles.activeLyric
-                        : styles.lyric
-                    }
-                  >
-                    {line.text}
+              {lyricLines.length > 0 && (
+                <>
+                  <p className={styles.activeLyric}>
+                    {lyricLines[activeLineIndex]?.text}
                   </p>
-                ))
-              ) : (
-                <p>{lyrics}</p>
+
+                  {activeLineIndex >= 0 && (
+                    <p className={styles.nextLyric}>
+                      {lyricLines[activeLineIndex + 1]?.text}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -312,7 +317,8 @@ export default function Home() {
               analyserRef={analyser}
               active={isPlaying}
               mode={visualizerMode}
-              artist={artist}
+              randomBaseColor={baseColor}
+              hueRange={55}
             />
           )}
         </div>

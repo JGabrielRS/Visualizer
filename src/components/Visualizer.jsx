@@ -3,12 +3,14 @@
 
 import { useEffect, useRef } from "react";
 import styles from "./Visualizer.module.css";
+import { hexToHsl, clamp } from "../utils/hexToHsl"
 
 export default function Visualizer({
     analyserRef,
     active,
     mode = "mesh-frequency",
-    artist
+    randomBaseColor = "#fefefe",
+    hueRange = 55
 }) {
     const canvasRef = useRef(null);
 
@@ -43,6 +45,19 @@ export default function Visualizer({
         let animationId;
         let time = 0;
 
+        // Cor principal da paleta
+        const baseHsl = hexToHsl(randomBaseColor);
+
+        // Controle da transição de cores
+        let currentHueShift = 0;
+        let targetHueShift = 0;
+
+        let colorProgress = 0;
+        let previousFrame = performance.now();
+
+        // Intensidade suavizada dos graves
+        let smoothedBass = 0;
+
         const columns = 80;
         const rows = 16;
 
@@ -65,82 +80,107 @@ export default function Visualizer({
             const width = canvas.clientWidth;
             const height = canvas.clientHeight;
 
-            // Captura os dados do áudio
-            if (isFrequency) {
-                analyser.getByteFrequencyData(frequencyData);
-            } else {
+            const now = performance.now();
+            const delta = Math.min(now - previousFrame, 50);
+
+            previousFrame = now;
+
+            // Captura as frequências
+            analyser.getByteFrequencyData(frequencyData);
+
+            if (isWaveform) {
                 analyser.getByteTimeDomainData(waveformData);
             }
 
+            // Calcula a intensidade dos graves
+            let bassRaw = 0;
+
+            const bassSamples = Math.min(20, frequencyData.length);
+
+            for (let i = 0; i < bassSamples; i++) {
+                bassRaw += frequencyData[i];
+            }
+
+            bassRaw /= bassSamples * 255;
+
+            // Aumenta a resposta dos graves
+            bassRaw = Math.min(bassRaw * 1.7, 1);
+
+            // Suaviza a intensidade
+            smoothedBass += (
+                bassRaw - smoothedBass
+            ) * (1 - Math.exp(-delta / 180));
+
+            const bass = smoothedBass;
+
+            // Controle das cores aleatórias
+            colorProgress += delta * (1 + bass * 4);
+
+            if (colorProgress >= 5000) {
+                colorProgress %= 5000;
+
+                targetHueShift = (
+                    Math.random() * 2 - 1
+                ) * hueRange * (0.65 + bass * 0.35);
+            }
+
+            // Transição das cores
+            const transitionDuration = 1600 - bass * 1100;
+
+            const transition = 1 - Math.exp(
+                -delta / transitionDuration
+            );
+
+            currentHueShift += (
+                targetHueShift - currentHueShift
+            ) * transition;
+
             ctx.clearRect(0, 0, width, height);
 
-            // Gradiente
+            // Cria o gradiente
             const gradient = ctx.createLinearGradient(
                 0, 0, width, 0
             );
 
-            if (artist.toUpperCase() === "FRANK OCEAN") {
-                ctx.shadowColor = "#49986b";
-                ctx.shadowBlur = 2;
-                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#fafafa");
-                    gradient.addColorStop(0.25, "#121212");
-                    gradient.addColorStop(0.5, "#a49b96");
-                    gradient.addColorStop(0.75, "#9e6150");
-                    gradient.addColorStop(1, "#49986b");
-                } else {
-                    gradient.addColorStop(0, "#ffffff");
-                    gradient.addColorStop(0.5, "#e7e7e7");
-                    gradient.addColorStop(1, "#d7d7d7");
-                }
-            } else if (artist.toUpperCase() === "KANYE WEST") {
-                ctx.shadowColor = "#b25186";
-                ctx.shadowBlur = 8;
+            const centerHue = (
+                baseHsl.h + currentHueShift + 360
+            ) % 360;
 
-                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#221e1f");
-                    gradient.addColorStop(0.25, "#ffffff");
-                    gradient.addColorStop(0.5, "#b9b353");
-                    gradient.addColorStop(0.75, "#853082");
-                    gradient.addColorStop(1, "#b25186");
-                } else {
-                    gradient.addColorStop(0, "#221e1f");
-                    gradient.addColorStop(0.5, "#b9b353");
-                    gradient.addColorStop(1, "#b25186");
-                }
-            } else if (artist.toUpperCase() === "DANIEL CAESAR") {
-                ctx.shadowColor = "#164cf4";
-                ctx.shadowBlur = 12;
+            // Variações próximas da cor principal
+            const stops = [
+                { position: 0, hue: -12, sat: 4, light: 0 },
+                { position: 0.25, hue: -6, sat: 10, light: 10 },
+                { position: 0.5, hue: 0, sat: 4, light: -4 },
+                { position: 0.75, hue: 7, sat: 12, light: 7 },
+                { position: 1, hue: 14, sat: 5, light: 2 }
+            ];
 
-                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#164cf4");
-                    gradient.addColorStop(0.2, "#72bef8");
-                    gradient.addColorStop(0.4, "#230c76");
-                    gradient.addColorStop(0.6, "#062892");
-                    gradient.addColorStop(1, "#075591");
-                } else {
-                    gradient.addColorStop(0, "#164cf4");
-                    gradient.addColorStop(0.5, "#230c76");
-                    gradient.addColorStop(1, "#075591");
-                }
-            } else {
-                ctx.shadowColor = "#e7e7e7";
-                ctx.shadowBlur = 8;
-                if (mode === "mesh-frequency" || mode === "mesh-waveform") {
-                    gradient.addColorStop(0, "#ffffff");
-                    gradient.addColorStop(0.25, "#f1f1f1");
-                    gradient.addColorStop(0.5, "#e7e7e7");
-                    gradient.addColorStop(0.75, "#e1e1e1");
-                    gradient.addColorStop(1, "#d7d7d7");
-                } else {
-                    gradient.addColorStop(0, "#ffffff");
-                    gradient.addColorStop(0.5, "#e7e7e7");
-                    gradient.addColorStop(1, "#d7d7d7");
-                }
-            }
+            stops.forEach((stop) => {
+                const hue = (
+                    centerHue + stop.hue + 360
+                ) % 360;
 
+                const saturation = clamp(
+                    baseHsl.s + stop.sat,
+                    35,
+                    95
+                );
 
-            // Oscilloscope
+                const lightness = clamp(
+                    baseHsl.l + stop.light,
+                    25,
+                    80
+                );
+
+                gradient.addColorStop(
+                    stop.position,
+                    `hsl(${hue}, ${saturation}%, ${lightness}%)`
+                );
+            });
+
+            // O brilho também responde aos graves
+            ctx.shadowColor = `hsl(${centerHue}, ${baseHsl.s}%, ${baseHsl.l}%)`;
+            ctx.shadowBlur = 5 + bass * 15;
 
             // Oscilloscope
             if (mode === "oscilloscope") {
@@ -199,18 +239,6 @@ export default function Visualizer({
 
                 return;
             }
-
-            // Intensidade dos graves
-            let bass = 0;
-
-            for (let i = 0; i < 20; i++) {
-                bass += frequencyData[i];
-            }
-
-            bass /= 20 * 255;
-
-            // Aumenta a resposta dos graves
-            bass = Math.min(bass * 1.7, 1);
 
             // Calcula os pontos da malha
             for (let row = 0; row <= rows; row++) {
@@ -336,7 +364,13 @@ export default function Visualizer({
             window.removeEventListener("resize", resizeCanvas);
         };
 
-    }, [analyserRef, active, mode]);
+    }, [
+        analyserRef,
+        active,
+        mode,
+        randomBaseColor,
+        hueRange
+    ]);
 
     return (
         <canvas
